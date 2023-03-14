@@ -29,7 +29,7 @@ router.get("/", (req, res, next) => {
             request: {
               type: "GET",
               description: "Returns the data of a specific product",
-              url: `${process.env.URL_API}/products/${prod.product_id}`
+              url: `${process.env.URL_API}/products/${prod.product_id}`,
             },
           };
         }),
@@ -181,9 +181,21 @@ router.delete("/:productId", (req, res, next) => {
             response: null,
           });
         }
-        res.status(200).send({
+
+        const response = {
           message: "Product deleted successfully",
-        });
+          request: {
+            type: "POST",
+            description: "Create a new product",
+            url: `${process.env.URL_API}/products`,
+            body: {
+              product_name: "String",
+              product_price: "Number",
+            },
+          },
+        };
+
+        res.status(200).send(response);
       }
     );
   });
