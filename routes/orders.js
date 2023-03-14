@@ -11,31 +11,46 @@ router.get("/", (req, res, next) => {
         response: null,
       });
     }
-    conn.query("SELECT * FROM orders;", (error, result, field) => {
-      conn.release();
-      if (error) {
-        return res.status(500).send({
-          error: error,
-          response: null,
-        });
+    conn.query(
+      `SELECT orders.order_id,
+              orders.order_quantity, 
+              products.product_id, 
+              products.product_name, 
+              products.product_price 
+      FROM orders 
+      INNER JOIN products 
+      ON products.product_id = orders.product_id;
+      `,
+      (error, result, field) => {
+        conn.release();
+        if (error) {
+          return res.status(500).send({
+            error: error,
+            response: null,
+          });
+        }
+        const response = {
+          count: result.length,
+          orders: result.map((order) => {
+            return {
+              order_id: order.order_id,
+              product: {
+                product_id: order.product_id,
+                product_name: order.product_name,
+                product_price: order.product_price,
+              },
+              order_quantity: order.order_quantity,
+              request: {
+                type: "GET",
+                description: "Returns the data of a specific order",
+                url: `${process.env.URL_API}/orders/${order.order_id}`,
+              },
+            };
+          }),
+        };
+        res.status(200).send(response);
       }
-      const response = {
-        count: result.length,
-        orders: result.map((order) => {
-          return {
-            order_id: order.order_id,
-            product_id: order.product_id,
-            order_quantity: order.order_quantity,
-            request: {
-              type: "GET",
-              description: "Returns the data of a specific order",
-              url: `${process.env.URL_API}/orders/${order.order_id}`,
-            },
-          };
-        }),
-      };
-      res.status(200).send(response);
-    });
+    );
   });
 });
 
