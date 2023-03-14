@@ -19,10 +19,22 @@ router.get("/", (req, res, next) => {
           response: null,
         });
       }
-      res.status(200).send({
-        message: "Handling GET requests to /products",
-        products: result,
-      });
+      const response = {
+        count: result.length,
+        products: result.map((prod) => {
+          return {
+            product_id: prod.product_id,
+            product_name: prod.product_name,
+            product_price: prod.product_price,
+            request: {
+              type: "GET",
+              description: "Returns the data of a specific product",
+              url: `${process.env.URL_API}/products/${prod.product_id}`
+            },
+          };
+        }),
+      };
+      res.status(200).send(response);
     });
   });
 });
@@ -47,10 +59,20 @@ router.post("/", (req, res, next) => {
             response: null,
           });
         }
-        res.status(201).send({
+        const response = {
           message: "Product created successfully",
-          product_id: result.insertId,
-        });
+          product: {
+            product_id: result.insertId,
+            product_name: req.body.product_name,
+            product_price: req.body.product_price,
+            request: {
+              type: "GET",
+              description: "Return all products",
+              url: `${process.env.URL_API}/products`,
+            },
+          },
+        };
+        res.status(201).send(response);
       }
     );
   });
@@ -81,10 +103,19 @@ router.get("/:productId", (req, res, next) => {
             message: "Product not found",
           });
         }
-        res.status(200).send({
-          message: "Handling GET requests to /products/:productId",
-          product: result,
-        });
+        const response = {
+          product: {
+            product_id: result[0].product_id,
+            product_name: result[0].product_name,
+            product_price: result[0].product_price,
+            request: {
+              type: "GET",
+              description: "Return all products",
+              url: `${process.env.URL_API}/products`,
+            },
+          },
+        };
+        res.status(200).send(response);
       }
     );
   });
@@ -110,9 +141,21 @@ router.patch("/:productId", (req, res, next) => {
             response: null,
           });
         }
-        res.status(200).send({
+
+        const response = {
           message: "Product updated successfully",
-        });
+          product: {
+            product_id: req.params.productId,
+            product_name: req.body.product_name,
+            product_price: req.body.product_price,
+            request: {
+              type: "GET",
+              description: "Returns the data of a specific product",
+              url: `${process.env.URL_API}/products/${req.params.productId}`,
+            },
+          },
+        };
+        res.status(200).send(response);
       }
     );
   });
