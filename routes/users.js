@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const mysql = require("../mysql").pool;
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-// sign in user
-router.post("/signin", (req, res, next) => {
+// sign up the user
+router.post("/signup", (req, res, next) => {
   mysql.getConnection((error, conn) => {
     if (error) {
       return res.status(500).send({
@@ -60,6 +61,65 @@ router.post("/signin", (req, res, next) => {
         }
       }
     );
+  });
+});
+
+// login the user
+router.post("/login", (req, res, next) => {
+  mysql.getConnection((error, conn) => {
+    if (error) {
+      return res.status(500).send({
+        error: error,
+        response: null,
+      });
+    }
+    const query = `SELECT * FROM users WHERE user_email = ?`;
+
+    conn.query(query, [req.body.user_email], (error, results, field) => {
+      conn.release();
+      if (error) {
+        return res.status(500).send({
+          error: error,
+          response: null,
+        });
+      }
+      if (results.length < 1) {
+        return res.status(401).send({
+          message: "Authentication failed",
+        });
+      }
+      bcrypt.compare(
+        req.body.user_password,
+        results[0].user_password,
+        (err, result) => {
+          if (err) {
+            return res.status(401).send({
+              message: "Authentication failed",
+            });
+          }
+          if (result) {
+            const token = jwt.sign(
+              {
+                user_id: results[0].user_id,
+                user_email: results[0].user_email,
+              },
+              process.env.JWT_KEY,
+              {
+                expiresIn: "1h",
+              }
+            );
+
+            return res.status(200).send({
+              message: "Authentication successful",
+              token: token,
+            });
+          }
+          return res.status(401).send({
+            message: "Authentication failed",
+          });
+        }
+      );
+    });
   });
 });
 
