@@ -1,4 +1,5 @@
 const mysql = require("../mysql");
+const { formatPath } = require("../utils/formatPath");
 
 exports.getAllProducts = async (req, res, next) => {
   try {
@@ -104,7 +105,7 @@ exports.updateSpecificProduct = async (req, res, next) => {
     const response = {
       message: "Product updated successfully",
       product: {
-        product_id: req.params.productId,
+        product_id: parseInt(req.params.productId),
         product_name: req.body.product_name,
         product_price: req.body.product_price,
         request: {
@@ -121,42 +122,6 @@ exports.updateSpecificProduct = async (req, res, next) => {
       response: null,
     });
   }
-  mysql.getConnection((error, conn) => {
-    if (error) {
-      return res.status(500).send({
-        error: error,
-        response: null,
-      });
-    }
-    conn.query(
-      "UPDATE products SET product_name = ?, product_price = ? WHERE product_id = ?;",
-      [req.body.product_name, req.body.product_price, req.params.productId],
-      (error, result, field) => {
-        conn.release();
-        if (error) {
-          return res.status(500).send({
-            error: error,
-            response: null,
-          });
-        }
-
-        const response = {
-          message: "Product updated successfully",
-          product: {
-            product_id: req.params.productId,
-            product_name: req.body.product_name,
-            product_price: req.body.product_price,
-            request: {
-              type: "GET",
-              description: "Returns the data of a specific product",
-              url: `${process.env.URL_API}/products/${req.params.productId}`,
-            },
-          },
-        };
-        res.status(200).send(response);
-      }
-    );
-  });
 };
 
 exports.deleteSpecificProduct = async (req, res, next) => {
@@ -174,6 +139,59 @@ exports.deleteSpecificProduct = async (req, res, next) => {
           product_price: "Number",
         },
       },
+    };
+    return res.status(200).send(response);
+  } catch (error) {
+    return res.status(500).send({
+      error: error,
+      response: null,
+    });
+  }
+};
+
+exports.addImageToProduct = async (req, res, next) => {
+  try {
+    const query =
+      "INSERT INTO product_images (product_id, image_path) VALUES (?, ?)";
+    const result = await mysql.execute(query, [
+      req.params.productId,
+      req.file.path,
+    ]);
+    const response = {
+      message: "Image added successfully",
+      createdImage: {
+        image_id: result.insertId,
+        product_id: parseInt(req.params.productId),
+        image_path: formatPath(req.file.path),
+        request: {
+          type: "GET",
+          description: "Return all images of a specific product",
+          url: `${process.env.URL_API}/products/${req.params.productId}/images`,
+        },
+      },
+    };
+    return res.status(201).send(response);
+  } catch (error) {
+    return res.status(500).send({
+      error: error,
+      response: null,
+    });
+  }
+};
+
+exports.getAllImagesOfSpecificProduct = async (req, res, next) => {
+  try {
+    const query = "SELECT * FROM product_images WHERE product_id = ?;";
+    const result = await mysql.execute(query, [req.params.productId]);
+    const response = {
+      count: result.length,
+      images: result.map((image) => {
+        return {
+          image_id: image.image_id,
+          product_id: parseInt(req.params.productId),
+          image_path: `${process.env.URL_API}/${formatPath(image.image_path)}`,
+        };
+      }),
     };
     return res.status(200).send(response);
   } catch (error) {

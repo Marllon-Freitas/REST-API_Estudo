@@ -121,7 +121,7 @@ exports.updateSpecificOrder = async (req, res, next) => {
     const response = {
       message: "Order updated successfully",
       order: {
-        order_id: req.params.orderId,
+        order_id: parseInt(req.params.orderId),
         product_id: req.body.product_id,
         order_quantity: req.body.order_quantity,
         request: {

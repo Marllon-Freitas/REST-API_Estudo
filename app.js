@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 const productsRoutes = require("./routes/products");
 const ordersRoutes = require("./routes/orders");
 const usersRoutes = require("./routes/users");
+const imagesRoutes = require("./routes/images");
 
 app.use(morgan("dev"));
 app.use("/uploads", express.static("uploads"));
@@ -31,6 +32,7 @@ app.use((req, res, next) => {
 app.use("/products", productsRoutes);
 app.use("/orders", ordersRoutes);
 app.use("/users", usersRoutes);
+app.use("/images", imagesRoutes);
 
 // Handle errors
 app.use((req, res, next) => {
