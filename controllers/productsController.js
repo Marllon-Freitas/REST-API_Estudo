@@ -3,8 +3,19 @@ const { formatPath } = require("../utils/formatPath");
 
 exports.getAllProducts = async (req, res, next) => {
   try {
-    const query = "SELECT * FROM products;";
-    const result = await mysql.execute(query);
+    let productName = "";
+    let categoryId = null;
+    if (req.query.productName) {
+      productName = req.query.productName;
+    }
+    if (req.query.categoryId) {
+      categoryId = req.query.categoryId;
+    }
+    const query = `SELECT * FROM products`;
+    const queryFilter = `SELECT * FROM products WHERE category_id = ? AND (product_name LIKE '%${productName}%');`;
+    const result = await mysql.execute(categoryId ? queryFilter : query, [
+      categoryId,
+    ]);
     const response = {
       count: result.length,
       products: result.map((prod) => {
@@ -33,11 +44,12 @@ exports.getAllProducts = async (req, res, next) => {
 exports.createNewProduct = async (req, res, next) => {
   try {
     const query =
-      "INSERT INTO products (product_name, product_price, product_image) VALUES (?, ?, ?)";
+      "INSERT INTO products (product_name, product_price, product_image, category_id) VALUES (?, ?, ?, ?)";
     const result = await mysql.execute(query, [
       req.body.product_name,
       req.body.product_price,
       req.file.path,
+      req.body.category_id,
     ]);
     const response = {
       message: "Product created successfully",
@@ -45,6 +57,7 @@ exports.createNewProduct = async (req, res, next) => {
         product_id: result.insertId,
         product_name: req.body.product_name,
         product_price: req.body.product_price,
+        category_id: req.body.category_id,
         product_image: req.file.path,
         request: {
           type: "GET",

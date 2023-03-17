@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const login = require("../middleware/login");
 
-const imagesController = require("../controllers/ImagesController");
+const imagesController = require("../controllers/imagesController");
 
 router.delete(
   "/:imageId",
