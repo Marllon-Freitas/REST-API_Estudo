@@ -4,15 +4,14 @@ const login = require("../middleware/login");
 
 const categoriesController = require("../controllers/categoriesController");
 
-router.get(
-  "/",
-  categoriesController.getAllCategories
-);
+router.get("/", categoriesController.getAllCategories);
 
-router.post(
-  "/",
+router.post("/", login.tokenRequired, categoriesController.createNewCategory);
+
+router.patch(
+  "/:categoryId",
   login.tokenRequired,
-  categoriesController.createNewCategory
+  categoriesController.updateSpecificCategory
 );
 
 module.exports = router;

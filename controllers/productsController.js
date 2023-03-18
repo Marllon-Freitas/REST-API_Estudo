@@ -16,6 +16,7 @@ exports.getAllProducts = async (req, res, next) => {
     const result = await mysql.execute(categoryId ? queryFilter : query, [
       categoryId,
     ]);
+
     const response = {
       count: result.length,
       products: result.map((prod) => {
@@ -23,7 +24,10 @@ exports.getAllProducts = async (req, res, next) => {
           product_id: prod.product_id,
           product_name: prod.product_name,
           product_price: prod.product_price,
-          product_image: prod.product_image,
+          product_image: formatPath(prod.product_image),
+          category: {
+            category_id: prod.category_id
+          },
           request: {
             type: "GET",
             description: "Returns the data of a specific product",
@@ -90,6 +94,9 @@ exports.getSpecificProduct = async (req, res, next) => {
         product_name: result[0].product_name,
         product_price: result[0].product_price,
         product_image: result[0].product_image,
+        category: {
+          category_id: result[0].category_id,
+        },
         request: {
           type: "GET",
           description: "Return all products",
